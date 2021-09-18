@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -35,15 +36,26 @@ public class Main {
         JOptionPane.showMessageDialog(null, infoMessage, titleBar, JOptionPane.INFORMATION_MESSAGE);
     }
 	public static boolean isUsernameTaken(String username) throws IOException {
-	       URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);       
-	        BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-	        String str = in.readLine();
-	        in.close();
+	       URL url = new URL("https://playerdb.co/api/player/minecraft/" + username);       
+
+	        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+	        con.setRequestMethod("GET");
+	        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+	        try {
+	        con.connect();
 	        
-	        if(!(str == null)) {
+	        String str = con.getContent().toString();
+	        System.out.println(str);
+
+	        con.disconnect();
+	        return true;
+	        }
+	        catch(Exception e) {
+	        	if(username.length() > 2) {
+	        	return false;
+	        	}
 	        	return true;
 	        }
-	        return false;
 	}
 	public static void main(String args[]) throws IOException {	
 	    JPanel middlePanel = new JPanel ();
@@ -92,7 +104,7 @@ public class Main {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				String allUsernames = null;
+				String allUsernames = "";
 				for (String line : lines) {
 					try {
 						if(!isUsernameTaken(line)) {
@@ -100,12 +112,10 @@ public class Main {
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
-						infoBox("Too many requests have been made, try again in 10 minutes", "Too many requests");
 						e.printStackTrace();
-						break;
 					}
-
 				}
+				infoBox("Finished checking usernames", "Finished");
 				display.setText(allUsernames);
 			}
 			
